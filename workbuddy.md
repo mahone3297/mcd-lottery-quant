@@ -64,7 +64,7 @@ Token 在 https://open.mcd.cn/mcp 申请（手机号登录 → 控制台 → 激
 - **样例数据必须是真实抓取的**，不能编 —— 否则样例模式和真机模式结论会不一致
 
 WorkBuddy 一次性产出了 `client.py` / `live.py` / `engine.py` / `report.py` /
-`sample.py` / `run.py`，以及 37 项单测。
+`sample.py` / `run.py`，以及 45 项单测。
 
 ---
 
@@ -73,9 +73,9 @@ WorkBuddy 一次性产出了 `client.py` / `live.py` / `engine.py` / `report.py`
 代码写完不算完，要跑三件事：
 
 ```bash
-python tests/test_engine.py       # 单测：37 项
+python tests/test_engine.py       # 单测：45 项
 python run.py --date 2026-10-09   # 样例模式：看报告排版
-MCD_MCP_TOKEN=xxx python run.py --live   # 真机模式：看能不能连通
+python run.py --live --token xxx  # 真机模式：看能不能连通（--token 跨 shell 通用）
 ```
 
 **真机模式第一次跑是失败的**：`[出错] 没拿到可用的抽奖活动信息`。

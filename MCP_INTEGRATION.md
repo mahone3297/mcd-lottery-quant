@@ -22,6 +22,25 @@
 客户端实现在 `mcd_quant/client.py`，**只用 Python 标准库**（`urllib` + `json`），
 不依赖任何 SDK。响应兼容 `text/event-stream`（SSE）与纯 JSON 两种形态。
 
+### Token 怎么交给程序
+
+按「`--token` → 环境变量 `MCD_MCP_TOKEN`」的顺序取，先取到先用：
+
+```bash
+python run.py --live --token 你的Token     # 推荐：跨 shell 通用
+```
+
+> ⚠️ **Windows 高频坑**：`set MCD_MCP_TOKEN=xxx` **只有 `cmd.exe` 认**。
+> 在 PowerShell 里 `set` 是 `Set-Variable` 的别名，它不会创建环境变量，
+> 而是造出一个名叫 `MCD_MCP_TOKEN=xxx`、值为空 的 PowerShell 变量，
+> **不报错也不提示**，看着像成功了，实际 `$env:MCD_MCP_TOKEN` 仍是空的。
+> Git Bash 同理（bash 的 `set X=Y` 只是设位置参数）。
+> 正确的写法是 `$env:MCD_MCP_TOKEN="xxx"`（PowerShell）或 `export ...`（bash）。
+>
+> 程序在取不到 Token 时会打印一份按 shell 区分的设置指引并以退出码 2 结束，
+> 不用自己去猜是哪儿写错了。另外 `resolve_token()` 会自动剥掉一层引号和首尾空白，
+> 所以 `set MCD_MCP_TOKEN="abc"` 这种把引号一起存进去的写法也能救回来。
+
 ---
 
 ## 2. 用到的工具
@@ -258,7 +277,8 @@ Below is the response from an API call. To help you understand the data, I've pr
 | 某个工具调用失败 | 该段用内置样例顶上，其余照常，报告末尾列出失败工具 |
 | 抽奖接口拿不到活动 | 直接报错退出（缺了这个就没得算） |
 | 商城没有可兑换商品 | 直接报错退出（缺了锚就无从比价） |
-| 没设 `MCD_MCP_TOKEN` | 走样例模式，`--live` 才要求 Token |
+| 没设 `MCD_MCP_TOKEN` | 走样例模式；`--live` / `--tools` 才要求 Token，缺了会打印一份按 shell 区分的设置指引并退出码 2 |
+| Token 带了引号/空格 | `resolve_token()` 自动剥掉一层引号和首尾空白（Windows `set X="abc"` 的常见手滑） |
 
 ---
 

@@ -28,12 +28,21 @@ description: 麦当劳积分抽奖量化占卜。算清「1 积分值多少钱�
 # 零依赖、不联网、不用 Token
 python run.py
 
-# 连真实麦当劳 MCP（只读，需环境变量 MCD_MCP_TOKEN）
+# 连真实麦当劳 MCP（只读）—— 推荐用 --token，跟当前 shell 无关
+python run.py --live --token 你的Token
+
+# 也可以走环境变量，但注意写法随 shell 变：
+#   cmd.exe          set MCD_MCP_TOKEN=你的Token
+#   PowerShell       $env:MCD_MCP_TOKEN="你的Token"
+#   Git Bash / mac   export MCD_MCP_TOKEN=你的Token
 python run.py --live
 
 # JSON 输出
 python run.py --json
 ```
+
+> ⚠️ PowerShell / Git Bash 里的 `set X=Y` **不会**设置环境变量（只有 cmd 认），
+> 且不报错 —— 遇到 `[出错] 没拿到 MCP Token` 就改用 `--token`。
 
 ## 输出示例
 

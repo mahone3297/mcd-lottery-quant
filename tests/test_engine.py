@@ -14,6 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcd_quant import client, engine, live, report, sample
 
+import run  # 仓库根目录的入口，sys.path 上面已插好
+
 # 样例数据抓取当天，固定住，测试才能复现
 NOW = datetime(2026, 10, 9, 15, 0, 0)
 
@@ -306,6 +308,64 @@ class TestCampaignParsing(unittest.TestCase):
     def test_empty_input(self):
         self.assertEqual(live.campaigns_today(None), [])
         self.assertEqual(live.campaigns_today(""), [])
+
+
+class TestTokenResolution(unittest.TestCase):
+    """Token 取值的容错。
+
+    踩过的坑：Windows 上 `set MCD_MCP_TOKEN="abc"` 会把引号一起存进去，
+    PowerShell / Git Bash 里的 `set X=Y` 则根本不设置环境变量（不报错，静默失败）。
+    这里保证「引号/空格/换行」都不会把好 Token 弄丢。
+    """
+
+    def setUp(self):
+        self._saved = os.environ.get("MCD_MCP_TOKEN")
+        os.environ.pop("MCD_MCP_TOKEN", None)
+
+    def tearDown(self):
+        if self._saved is None:
+            os.environ.pop("MCD_MCP_TOKEN", None)
+        else:
+            os.environ["MCD_MCP_TOKEN"] = self._saved
+
+    def test_cli_wins_over_env(self):
+        os.environ["MCD_MCP_TOKEN"] = "from-env"
+        self.assertEqual(run.resolve_token("from-cli"), "from-cli")
+
+    def test_reads_env_when_cli_missing(self):
+        os.environ["MCD_MCP_TOKEN"] = "from-env"
+        self.assertEqual(run.resolve_token(None), "from-env")
+
+    def test_strips_quotes_whitespace_and_newline(self):
+        for raw in ('  "abc123"  ', "'abc123'", "abc123\r\n", ' "abc123" '):
+            self.assertEqual(run.resolve_token(raw), "abc123", raw)
+
+    def test_empty_cases_return_empty(self):
+        for raw in (None, "", "   ", '""', "''", "\n"):
+            self.assertEqual(run.resolve_token(raw), "", repr(raw))
+
+    def test_powershell_style_set_does_not_leak(self):
+        """PowerShell/Git Bash 的 `set X=Y` 不设环境变量 —— 取到就是空，不能瞎猜。"""
+        self.assertEqual(run.resolve_token(None), "")
+
+    def test_help_mentions_missing_env(self):
+        text = run.token_help()
+        self.assertIn("没有设置", text)
+        self.assertIn("PowerShell", text)
+
+    def test_help_mentions_blank_env(self):
+        os.environ["MCD_MCP_TOKEN"] = "   "
+        self.assertIn("值是空的", run.token_help())
+
+    def test_cli_without_token_exits_2_and_hints(self):
+        import contextlib
+        import io
+
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = run.main(["--live"])
+        self.assertEqual(code, 2)
+        self.assertIn("--token", err.getvalue())
 
 
 if __name__ == "__main__":

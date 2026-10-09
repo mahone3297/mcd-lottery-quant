@@ -45,17 +45,38 @@
 python run.py
 
 # 连真实麦当劳 MCP（只读）
-export MCD_MCP_TOKEN=你的Token        # Windows: set MCD_MCP_TOKEN=你的Token
-python run.py --live
+python run.py --live --token 你的Token
 
 # 输出 JSON，给网页或脚本用
 python run.py --json
 
 # 看看服务端提供哪些 MCP 工具
-python run.py --tools
+python run.py --tools --token 你的Token
 ```
 
 **零依赖** —— 只用 Python 标准库，Python 3.8 以上直接跑，不用 pip install 任何东西。
+
+### Token 怎么给
+
+最省事的是 `--token`，写在命令行上，**跟当前是哪个 shell 无关**：
+
+```bash
+python run.py --live --token 你的Token
+```
+
+想用环境变量也行，但**注意不同 shell 的写法不一样**：
+
+| 你在哪个终端 | 怎么写 |
+|---|---|
+| `cmd.exe` | `set MCD_MCP_TOKEN=你的Token` |
+| PowerShell | `$env:MCD_MCP_TOKEN="你的Token"` |
+| Git Bash / macOS / Linux | `export MCD_MCP_TOKEN=你的Token` |
+
+> ⚠️ **Windows 上最常见的坑**：在 **PowerShell** 或 **Git Bash** 里敲 `set MCD_MCP_TOKEN=xxx`
+> 是**不会设置环境变量的** —— 它不报错、不提示，静静地把这行吃掉，
+> 看着像成功了，其实 `$env:MCD_MCP_TOKEN` 仍然是空的。
+> 只有 `cmd.exe` 认 `set` 这个写法。遇到 `[出错] 没拿到 MCP Token` 时，
+> 直接改用 `--token`，或者换到 `cmd.exe` 里跑。
 
 ---
 
@@ -172,7 +193,7 @@ mcd-lottery-quant/
 │   └── sample.py             内置样例（2026-10-09 真实抓取，非编造）
 ├── demo/index.html           演示页（README 那张图就是它）
 ├── docs/demo-screenshot.png  演示页截图
-├── tests/test_engine.py      37 项单测，全部离线可跑
+├── tests/test_engine.py      45 项单测，全部离线可跑
 ├── SKILL.md                  WorkBuddy 技能定义
 ├── MCP_INTEGRATION.md        MCP 接入细则、调用流程、踩过的坑
 └── workbuddy.md              用 WorkBuddy 复现这个项目的完整步骤
@@ -186,8 +207,8 @@ mcd-lottery-quant/
 python tests/test_engine.py
 ```
 
-37 项，覆盖：金额解析、过期商品过滤、中位数计算、奖品分类、保本线、
-比价结论、报告渲染，以及**两条合规检查**（白名单里绝不能出现会花钱的工具）。
+45 项，覆盖：金额解析、过期商品过滤、中位数计算、奖品分类、保本线、
+比价结论、报告渲染、Token 取值容错，以及**两条合规检查**（白名单里绝不能出现会花钱的工具）。
 
 全部离线，不联网、不消耗任何真实积分。
 
